@@ -61,16 +61,23 @@ const Home: NextPage = () => {
 
   const onMint = async () => {
     if (!sdk) return;
+    setLoading(true);
 
-    const talentLayerID = await sdk.getContractFromAbi(
-      talentLayerIdAddress,
-      TalentLayerIDAbi
-    );
+    try {
+      const talentLayerID = await sdk.getContractFromAbi(
+        talentLayerIdAddress,
+        TalentLayerIDAbi
+      );
 
-    const tx = await talentLayerID.call("mint", 1, handle);
-    const receipt = tx.receipt;
+      await talentLayerID.call("mint", 1, handle);
 
-    console.log("Receipt: ", receipt);
+      setHandle("");
+      // getProfile();
+    } catch (error: any) {
+      setError(error.message);
+    }
+
+    setLoading(false);
   };
 
   return (
