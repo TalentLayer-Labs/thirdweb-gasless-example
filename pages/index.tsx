@@ -41,13 +41,23 @@ const Home: NextPage = () => {
       );
 
       const tlId = await talentLayerID.call("walletOfOwner", address);
+      if (tlId.toNumber() === 0) {
+        setProfile(null);
+        return;
+      }
+
       const profile = await talentLayerID.call("profiles", tlId);
+
+      setProfile({
+        id: tlId.toNumber(),
+        handle: profile.handle,
+      });
 
       setHandle(profile.handle);
     };
 
     getContract();
-  });
+  }, [sdk, address]);
 
   const onMint = async () => {
     if (!sdk) return;
@@ -57,7 +67,7 @@ const Home: NextPage = () => {
       TalentLayerIDAbi
     );
 
-    const tx = await talentLayerID.call("mint", 1, "yolown");
+    const tx = await talentLayerID.call("mint", 1, handle);
     const receipt = tx.receipt;
 
     console.log("Receipt: ", receipt);
