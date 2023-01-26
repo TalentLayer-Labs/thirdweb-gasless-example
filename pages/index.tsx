@@ -2,15 +2,16 @@ import {
   ConnectWallet,
   useAddress,
   useContract,
+  useContractWrite,
   useSDK,
 } from "@thirdweb-dev/react";
 import type { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TalentLayerIDAbi } from "../abis/talent-layer-id-abi";
 import styles from "../styles/Home.module.css";
 
-const talentLayerIdAddress = "0x84d4c7B4c01a023759352A33A4B9798C1f623Ab8"; // goerli
-// const talentLayerIdAddress = "0xF7b376f4960b678c7B06aD1240733AC3EF71afE5"; // mumbai
+const talentLayerIdAddress = "0x84d4c7B4c01a023759352A33A4B9798C1f623Ab8";
+const platformId = 1;
 
 interface Profile {
   id: number;
@@ -21,58 +22,52 @@ const Home: NextPage = () => {
   const sdk = useSDK();
   const address = useAddress();
 
-  // const [handle, setHandle] = useState("");
+  const { contract: talentLayerID } = useContract(
+    talentLayerIdAddress,
+    TalentLayerIDAbi
+  );
+
+  const { mutateAsync: mint } = useContractWrite(talentLayerID, "mint");
+
   const [profile, setProfile] = useState<Profile | null>();
   const [handle, setHandle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // const [talentLayerID, setTalentLayerID] = useState<ethers.Contract | null>(
-  //   null
-  // );
+  /**
+   * Get TalentLayer profile data for the connected wallet
+   */
+  const getProfile = useCallback(async () => {
+    if (!talentLayerID || !address) return;
+
+    const tlId = await talentLayerID.call("walletOfOwner", address);
+    if (tlId.toNumber() === 0) {
+      setProfile(null);
+      return;
+    }
+
+    const profile = await talentLayerID.call("profiles", tlId);
+
+    setProfile({
+      id: tlId.toNumber(),
+      handle: profile.handle,
+    });
+  }, [talentLayerID, address]);
 
   useEffect(() => {
-    if (!sdk || !address) return;
-
-    const getContract = async () => {
-      const talentLayerID = await sdk.getContractFromAbi(
-        talentLayerIdAddress,
-        TalentLayerIDAbi
-      );
-
-      const tlId = await talentLayerID.call("walletOfOwner", address);
-      if (tlId.toNumber() === 0) {
-        setProfile(null);
-        return;
-      }
-
-      const profile = await talentLayerID.call("profiles", tlId);
-
-      setProfile({
-        id: tlId.toNumber(),
-        handle: profile.handle,
-      });
-
-      setHandle(profile.handle);
-    };
-
-    getContract();
-  }, [sdk, address]);
+    getProfile();
+  }, [getProfile]);
 
   const onMint = async () => {
     if (!sdk) return;
     setLoading(true);
+    setError("");
 
     try {
-      const talentLayerID = await sdk.getContractFromAbi(
-        talentLayerIdAddress,
-        TalentLayerIDAbi
-      );
-
-      await talentLayerID.call("mint", 1, handle);
+      await mint([platformId, handle]);
 
       setHandle("");
-      // getProfile();
+      getProfile();
     } catch (error: any) {
       setError(error.message);
     }
