@@ -66,7 +66,7 @@ const Home: NextPage = () => {
   return (
     <div className={styles.container}>
       <main className={styles.main}>
-        <h1 className={styles.title}>TalentLayer Open GSN Gasless Example</h1>
+        <h1 className={styles.title}>TalentLayer Thirdweb Gasless Example</h1>
 
         <ConnectWallet />
 
