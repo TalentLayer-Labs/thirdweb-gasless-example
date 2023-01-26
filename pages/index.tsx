@@ -93,7 +93,7 @@ const Home: NextPage = () => {
               submit the transaction to the blockchain for you, paying for the
               gas fees. Learn more{" "}
               <a
-                href="https://docs.opengsn.org/"
+                href="https://portal.thirdweb.com/sdk/advanced-features/gasless-transactions"
                 className={styles.link}
                 target="_blank"
                 rel="noreferrer"
